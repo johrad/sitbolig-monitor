@@ -6,7 +6,7 @@ from playsound import playsound
 
 
 def checkApartmentsAvail(AptToCheck):
-    client = GraphqlClient(endpoint="https://as-portal-api-prodaede2914.azurewebsites.net/graphql")
+    client = GraphqlClient(endpoint="https://as-portal-api-prodaede2914.azurewebsites.net/graphql") # found from inspect element
 
     query = """
     query GetHousingIds($input: GetHousingsInput!) {
@@ -20,7 +20,7 @@ def checkApartmentsAvail(AptToCheck):
     """
     variables = {
         "input":{
-        "rentalObjectIds": AptToCheck,
+        "rentalObjectIds": AptToCheck, # checks the apt we want
         "showUnavailable": True,
         "reservationCode": "",
         "includeFilterCounts": False
@@ -28,36 +28,38 @@ def checkApartmentsAvail(AptToCheck):
 
     json_data = client.execute(query=query, variables=variables)
     data = json_data['data']['housings']['housingRentalObjects']
-    return data[0]['isAvailable']
+    return data[0]['isAvailable'] #filters so only a boolean.
 
-AptToCheck = ["HK46-41", "OB043-103", "KL124-702"]
+# list of apt to check
+AptToCheck = ["HK46-41", "OB043-103", "HK15-33", "MAG2-22"]
 
+# init logfile name
 log_file = 'website_update_log_MONITOR.txt'
 
 while True:
     try:
-        for appartment in AptToCheck:
-            time.sleep(random.randint(1, 3))
+        for apartment in AptToCheck:
+            time.sleep(random.randint(4, 11))
             current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            if checkApartmentsAvail(appartment):
-                message = f"{current_timestamp}: {appartment} is available !!!!!"
+            if checkApartmentsAvail(apartment):
+                message = f"{current_timestamp}: {apartment} is available !!!!!"
                 
                 print(message)
 
                 with open(log_file, 'a') as file:
                     file.write(message + '\n')
 
-                playsound('pling.wav')
+                playsound('alarm1.wav')
 
             else:
-                 print(f"Refreshed {appartment} at {current_timestamp}")
+                 print(f"Refreshed {apartment} at {current_timestamp}")
 
 
     except Exception as e:
         error_message = f"An error occurred: {e}"
         print(error_message)
         with open(log_file, 'a') as file:
-                    file.write(error_message + ' !!!!!!! \n')
-        playsound('alarm1.wav')
+                    file.write(error_message + ' !!!!!!!!! \n')
+        playsound('pling.wav') # wake up if errors
 
-    time.sleep(random.randint(4, 10))
+    time.sleep(random.randint(60, 100)) # tune if need be
